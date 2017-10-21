@@ -163,12 +163,15 @@ def engine_start(http_host, http_port):
 def engine_stop():
     package = env.package
 
-    with cd("/opt/marvin/engines/{package}/current".format(package=package)):
-        children_pids = run("ps --ppid $(cat /var/run/marvin/engines/{package}.pid) -o pid --no-headers |xargs echo".format(
-            package=package))
-        run("kill $(cat /var/run/marvin/engines/{package}.pid) {children_pids}".format(
-            package=package, children_pids=children_pids))
-    run("rm /var/run/marvin/engines/{package}.pid".format(package=package))
+    pid_file_exists = run("cat /var/run/marvin/engines/{package}.pid".format(
+        package=package), quiet=True)
+    if pid_file_exists.succeeded:
+        with cd("/opt/marvin/engines/{package}/current".format(package=package)):
+            children_pids = run("ps --ppid $(cat /var/run/marvin/engines/{package}.pid) -o pid --no-headers |xargs echo".format(
+                package=package))
+            run("kill $(cat /var/run/marvin/engines/{package}.pid) {children_pids}".format(
+                package=package, children_pids=children_pids))
+            run("rm /var/run/marvin/engines/{package}.pid".format(package=package))
 
 
 def engine_status():
